@@ -1,0 +1,182 @@
+#Import The Module
+import simplegui
+import random
+import math
+
+#define Global variables(program state)
+WIDTH = 600
+HEIGHT = 400
+BALL_RADIUS = 10
+gameON = True
+SCORE=0
+SCORE_S = "0"
+TEXT_POS=(WIDTH/1.1,HEIGHT/10)
+FLAGE = 0
+GO_POS = (WIDTH/8,HEIGHT/2)
+MSG1 = "YOU CRASHED YOUR SELF"
+FLAGE1_POS = (WIDTH/5,HEIGHT/1.5)
+MSG2 = "YOU HIT THE BOUNDARY"
+FLAGE2_POS = (WIDTH/5,HEIGHT/1.5)
+SCORE_POS = (WIDTH/3.8,HEIGHT/1.25)
+SCORE_MSG = "YOUR SCORE IS : 0"
+
+food = [50,50]
+food_list = []
+
+
+
+interval = 1000
+SH_X = WIDTH / 2 
+SH_Y = HEIGHT / 2
+snake= [[SH_X,SH_Y]]
+dir = [0,0]
+time = 1.2
+
+
+
+
+# "PLAY"/"RESET" button
+def start_game():
+    global snake , SH_X , SH_Y , dir , BALL_RADIUS , time , food , gameON ,SCORE, SCORE_S,MSG1,FLAGE1_POS,MSG2,FLAGE2_POS,FLAGE,SCORE_POS,SCORE_MSG
+    gameON = True
+    BALL_RADIUS = 10
+    SCORE = 0
+    SCORE_S = "0"
+    TEXT_POS=(WIDTH/1.1,HEIGHT/10)
+    FLAGE = 0
+    GO_POS = (WIDTH/8,HEIGHT/2)
+    MSG1 = "YOU CRASHED YOUR SELF"
+    FLAGE1_POS = (WIDTH/5,HEIGHT/1.5)
+    MSG2 = "YOU HIT THE BOUNDARY"
+    FLAGE2_POS = (WIDTH/5,HEIGHT/1.5)
+    SCORE_POS = (WIDTH/3.8,HEIGHT/1.25)
+    SCORE_MSG = "YOUR SCORE IS : 0"
+
+    interval = 1000
+    SH_X = WIDTH / 2 
+    SH_Y = HEIGHT / 2
+    snake= [[SH_X,SH_Y]]
+    dir = [0,0]
+    time = 1.2
+    
+
+#Handler for Timer 
+def tick():
+    global time
+    gameON = True
+    
+    
+    
+def draw(canvas):
+    global snake,SH_X,SH_Y,dir,BALL_RADIUS,time,SCORE, SCORE_S,FLAGE,GO_POS,MSG1,FLAGE1_POS,MSG2,FLAGE2_POS,SCORE_POS,SCORE_MSG
+    if gameON == True:
+
+        #snake movement
+        SH_X = SH_X +  time *dir[0]
+        SH_Y = SH_Y +  time *dir[1]
+
+
+
+        snake_length = len(snake)      					#for death
+        for dot in snake:
+            if snake_length > 1 and dot[0] == SH_X and dot[1] == SH_Y:		
+                selfdeath()
+            if SH_X > WIDTH or  SH_Y > HEIGHT or SH_X < 0 or SH_Y < 0:
+                screendeath()    
+
+
+        if  snake[0][0]>food[0] and snake[0][1]>food[1] and snake[0][0]-food[0]<BALL_RADIUS and snake[0][1]-food[1]<BALL_RADIUS or food[0]>snake[0][0] and food[1]>snake[0][1] and food[0]-snake[0][0]<BALL_RADIUS and food[1]-snake[0][1]<BALL_RADIUS:
+            Z = 0										#to add ball radius size when eat food
+
+            while Z < BALL_RADIUS: 
+                snake.append([-1, -1]) 
+                Z += 1
+
+            foodpos()
+            SCORE = SCORE+1
+            SCORE_S = str(SCORE)
+            SCORE_MSG = "YOUR SCORE IS : "+SCORE_S
+            time += 0.1				#TO ADD SPEED AFTEREACH FOOD
+
+        snake.pop(-1)			#for maintain length after movement or to remve foot print
+        snake.insert(0, [SH_X, SH_Y])			# for movement add ball in front
+
+
+
+
+
+        #draw 
+        for dot in snake:
+            canvas.draw_circle(dot,BALL_RADIUS,2,"White","Red")
+        canvas.draw_circle(food,BALL_RADIUS,2,"Blue","Red")
+        canvas.draw_text(SCORE_S,TEXT_POS, 40, 'Red')
+
+    else:
+        if FLAGE == 1:
+            canvas.draw_text(MSG1,FLAGE1_POS, 30, 'Red')
+            
+        elif FLAGE == 2 :
+            canvas.draw_text(MSG2,FLAGE2_POS, 30, 'Red')
+            
+        canvas.draw_text(SCORE_MSG,SCORE_POS, 30, 'Red')    
+        canvas.draw_text("GAME OVER",GO_POS, 80, 'Red')
+        
+
+            
+def keydown(key):
+    if key == simplegui.KEY_MAP["left"]:
+        dir[0] = -1
+        dir[1] = 0 
+        
+    elif key == simplegui.KEY_MAP["right"]:
+        dir[0] = 1
+        dir[1] = 0
+        
+    if key == simplegui.KEY_MAP["down"]:
+        dir[0] = 0
+        dir[1] = 1
+        
+    if key == simplegui.KEY_MAP["up"]:
+        dir[0] = 0
+        dir[1] = -1
+        
+        
+           
+def foodpos():
+    x = random.randrange(BALL_RADIUS,WIDTH-BALL_RADIUS)
+    y = random.randrange(BALL_RADIUS,HEIGHT-BALL_RADIUS)
+    food[0] = x
+    food[1] = y
+
+    
+# makes SNAKE die if it runs into Screen
+def screendeath():
+    global gameON,FLAGE
+    FLAGE = 2
+    gameON = False
+    return
+
+# makes SNAKE die if it runs into itself
+def selfdeath():
+    global gameON,FLAGE
+    FLAGE = 1
+    gameON = False
+    return
+    
+    
+#create frame
+frame = simplegui.create_frame("SNAKE GAME",WIDTH,HEIGHT)
+
+
+
+#Register event handlers
+frame.set_draw_handler(draw)
+timer = simplegui.create_timer(interval,tick)
+frame.set_keydown_handler(keydown)
+frame.add_button("PLAY AGAIN", start_game)
+
+
+
+#start frame
+frame.start()
+timer.start()
